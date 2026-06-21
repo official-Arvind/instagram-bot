@@ -33,6 +33,7 @@ def _try_resume_session(cl: Client, path: Path) -> bool:
     """Try to resume an existing session. Returns True on success."""
     try:
         cl.load_settings(str(path))
+        cl.username = path.stem  # Ensure username attribute is restored
         cl.get_timeline_feed()  # Lightweight check
         return True
     except Exception:
@@ -93,7 +94,8 @@ def _login_session_file(cl: Client) -> tuple[str, bool]:
     try:
         cl.load_settings(file_path)
         cl.get_timeline_feed()
-        username = cl.username
+        username = cl.username or Path(file_path).stem
+        cl.username = username
         return username, True
     except Exception as e:
         console.print(f"  [red]Session file failed: {e}[/red]")

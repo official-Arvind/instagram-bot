@@ -1,5 +1,8 @@
 # 🤖 Instagram Bot
 
+[![Documentation](https://img.shields.io/badge/docs-live-brightgreen)](https://official-arvind.github.io/instagram-bot/)
+[![GitHub repo](https://img.shields.io/github/stars/official-Arvind/instagram-bot?style=flat-square)](https://github.com/official-Arvind/instagram-bot)
+
 > Autonomous Instagram content scouting and posting bot.  
 > Find viral reels, edit captions, and post — all from your terminal.
 

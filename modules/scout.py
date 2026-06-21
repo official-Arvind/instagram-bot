@@ -90,6 +90,38 @@ def _to_dict(media, cl) -> dict | None:
 
 
 
+def expand_hashtags(cl, base_tags: list[str], limit_per_tag: int = 2) -> list[str]:
+    """
+    Expand a list of base hashtags by searching Instagram for related trending hashtags.
+    """
+    expanded = list(base_tags)
+    for tag in base_tags:
+        try:
+            # Query Instagram's search for similar hashtags
+            results = cl.search_hashtags(tag)
+            related = []
+            for item in results:
+                name = item.name.lower().strip()
+                if name != tag.lower() and (tag.lower() in name or name in tag.lower()):
+                    related.append((name, getattr(item, 'media_count', 0) or 0))
+            
+            # Sort by popularity (media count) descending
+            related.sort(key=lambda x: x[1], reverse=True)
+            
+            # Take the top related tags
+            added = 0
+            for name, count in related:
+                if name not in expanded:
+                    expanded.append(name)
+                    added += 1
+                    if added >= limit_per_tag:
+                        break
+            time.sleep(0.2)  # Rate limit courtesy
+        except Exception:
+            pass
+    return expanded
+
+
 def search_content(cl, hashtags: list[str], content_type: str, target_count: int) -> list[dict]:
     """
     Search across multiple hashtags and return ranked list of content.
@@ -103,10 +135,16 @@ def search_content(cl, hashtags: list[str], content_type: str, target_count: int
     Returns:
         Sorted list of media dicts (most engaging first)
     """
+    # Smart Hashtag Expansion
+    console.print("  [dim]Expanding hashtags to discover related trending tags...[/dim]")
+    expanded_tags = expand_hashtags(cl, hashtags)
+    console.print("  [dim]Target tags:[/dim] " + "  ".join(f"[cyan]#{t}[/cyan]" for t in expanded_tags))
+    console.print()
+
     content_filter = CONTENT_FILTERS.get(content_type, CONTENT_FILTERS["reel"])
     seen_pks = set()
     candidates = []
-    fetch_per_tag = max(20, target_count * 2)  # Fetch extra to have margin
+    fetch_per_tag = max(15, target_count * 2)  # Fetch extra to have margin
 
     with Progress(
         SpinnerColumn(spinner_name="dots"),
@@ -116,9 +154,9 @@ def search_content(cl, hashtags: list[str], content_type: str, target_count: int
         console=console,
         transient=True,
     ) as progress:
-        task = progress.add_task("[cyan]Scouting hashtags...", total=len(hashtags))
+        task = progress.add_task("[cyan]Scouting hashtags...", total=len(expanded_tags))
 
-        for tag in hashtags:
+        for tag in expanded_tags:
             progress.update(task, description=f"[cyan]Searching [bold]#{tag}[/bold]...")
             try:
                 medias = cl.hashtag_medias_top(tag, amount=fetch_per_tag)

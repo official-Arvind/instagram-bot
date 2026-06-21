@@ -756,8 +756,8 @@
                         <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                     </svg>
                 </div>
-                <h3>Viral Scout Engine</h3>
-                <p>Scout top media across multiple hashtags. Computes a composite engagement score based on likes and views to retrieve the most viral content first.</p>
+                <h3>Smart Scout Engine</h3>
+                <p>Dynamically queries Instagram's database to expand search tags into related trending hashtags. Ranks candidates by composite engagement scores to retrieve the best viral content.</p>
             </div>
 
             <div class="feature-card">
@@ -962,7 +962,7 @@ python bot.py</pre>
             { type: 'output', text: '\n  <span class="t-dim">Type selected:</span> <span class="t-bold">🎬  Reels</span>\n\n' },
             { type: 'output', text: '<span class="t-cyan t-bold">─── Step 3 — How Many? ─────────────────────────────────────────────</span>\n  <span class="t-dim">How many pieces of content should the bot scout for you?</span>\n\n  <span class="t-cyan t-bold">Count (default 10):</span> ' },
             { type: 'input', text: '4', delay: 1200 },
-            { type: 'output', text: '\n\n<span class="t-cyan t-bold">─── Step 4 — Scouting Content ──────────────────────────────────────</span>\n  <span class="t-dim">Fetching top 4 reels across 2 hashtag(s)...</span>\n  <span class="t-cyan">⠋ Scouting hashtags... [██████████████████████████████] 100%</span>\n\n' },
+            { type: 'output', text: '\n\n<span class="t-cyan t-bold">─── Step 4 — Scouting Content ──────────────────────────────────────</span>\n  <span class="t-dim">Expanding hashtags to discover related trending tags...</span>\n  <span class="t-dim">Target tags:</span> <span class="t-cyan">#urdupoetry</span>  <span class="t-cyan">#shayari</span>  <span class="t-cyan">#poetrylover</span>  <span class="t-cyan">#shayarilover</span>\n\n  <span class="t-dim">Fetching top 4 reels across 4 hashtag(s)...</span>\n  <span class="t-cyan">⠋ Scouting hashtags... [██████████████████████████████] 100%</span>\n\n' },
             { type: 'output', text: '<span class="t-green t-bold">─── Results ────────────────────────────────────────────────────────</span>\n  ┌──────────────────────────────────────────────────────────────────┐\n  │ <span class="t-bold">#</span>    <span class="t-purple t-bold">Author</span>           <span class="t-green t-bold">👁 Views</span>     <span class="t-red t-bold">❤ Likes</span>   <span class="t-yellow t-bold">⏱ Dur</span>    <span class="t-bold">Caption</span>        │\n  ├──────────────────────────────────────────────────────────────────┤\n  │ 1    @poetry_kingdom  2,450,123   182,340   15s      Dard ki sh...  │\n  │ 2    @urdulines.hub   1,890,404   124,591   21s      Woh baat j...  │\n  │ 3    @mushaira.vibes  1,120,442    98,203   29s      Aankhein b...  │\n  │ 4    @sher_o_sukhan     890,203    74,320   12s      Batao kais...  │\n  └──────────────────────────────────────────────────────────────────┘\n  <span class="t-dim">Total found: 4 results</span>\n\n' },
             { type: 'output', text: '<span class="t-cyan t-bold">─── Step 4 — Select Content ────────────────────────────────────────</span>\n  <span class="t-dim">Enter numbers to post. Examples:</span>\n    <span class="t-cyan">1,3,5</span>  → post items 1, 3 and 5\n    <span class="t-cyan">1-4</span>    → post items 1 through 4\n    <span class="t-cyan">all</span>    → post everything\n\n  <span class="t-cyan t-bold">Your selection:</span> ' },
             { type: 'input', text: '1,3', delay: 1500 },

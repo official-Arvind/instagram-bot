@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instagram Bot — Autonomous Content Scouting & Posting CLI</title>
+    <meta name="description" content="An autonomous, terminal-based Instagram content bot. Scout viral reels and photos by hashtags, filter by engagement, automatically edit captions, and post instantly.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #0b0c10;
+            --panel-bg: rgba(22, 24, 35, 0.6);
+            --panel-border: rgba(255, 255, 255, 0.08);
+            --text-primary: #f3f4f6;
+            --text-secondary: #9ca3af;
+            --text-muted: #6b7280;
+            --accent-purple: #8b5cf6;
+            --accent-pink: #ec4899;
+            --accent-orange: #f43f5e;
+            --accent-gradient: linear-gradient(135deg, #8b5cf6 0%, #ec4899 50%, #f43f5e 100%);
+            --terminal-bg: #111216;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Ambient Glow Backgrounds */
+        .glow-orb {
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(139, 92, 246, 0.15) 0%, rgba(236, 72, 153, 0.05) 50%, rgba(0,0,0,0) 70%);
+            z-index: -1;
+            filter: blur(80px);
+            pointer-events: none;
+        }
+
+        .glow-1 {
+            top: -200px;
+            right: -100px;
+        }
+
+        .glow-2 {
+            bottom: 20%;
+            left: -200px;
+            background: radial-gradient(circle, rgba(236, 72, 153, 0.15) 0%, rgba(244, 63, 94, 0.05) 50%, rgba(0,0,0,0) 70%);
+        }
+
+        /* Navigation */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+            position: relative;
+            z-index: 10;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: 800;
+            font-size: 1.5rem;
+            letter-spacing: -0.05em;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo svg {
+            stroke: url(#logo-grad);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: color 0.2s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--text-primary);
+        }
+
+        .btn-github {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--panel-border);
+            color: var(--text-primary);
+            text-decoration: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 9999px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+        }
+
+        .btn-github:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        /* Hero Section */
+        .hero {
+            max-width: 1200px;
+            margin: 2rem auto 6rem;
+            padding: 0 1.5rem;
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            gap: 4rem;
+            align-items: center;
+        }
+
+        @media (max-width: 968px) {
+            .hero {
+                grid-template-columns: 1fr;
+                gap: 3rem;
+                margin-top: 1rem;
+                margin-bottom: 4rem;
+                text-align: center;
+            }
+        }
+
+        .hero-info {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .hero-tag {
+            align-self: flex-start;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.4rem 1rem;
+            border-radius: 9999px;
+            background: rgba(139, 92, 246, 0.15);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            color: #c084fc;
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        @media (max-width: 968px) {
+            .hero-tag {
+                align-self: center;
+            }
+        }
+
+        .hero-title {
+            font-size: 3.5rem;
+            font-weight: 800;
+            line-height: 1.1;
+            letter-spacing: -0.04em;
+        }
+
+        .hero-title span {
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        @media (max-width: 640px) {
+            .hero-title {
+                font-size: 2.5rem;
+            }
+        }
+
+        .hero-desc {
+            font-size: 1.15rem;
+            color: var(--text-secondary);
+            max-width: 550px;
+        }
+
+        @media (max-width: 968px) {
+            .hero-desc {
+                margin: 0 auto;
+            }
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        @media (max-width: 968px) {
+            .hero-actions {
+                justify-content: center;
+            }
+        }
+
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--accent-gradient);
+            color: white;
+            text-decoration: none;
+            padding: 0.8rem 1.8rem;
+            border-radius: 9999px;
+            font-weight: 700;
+            transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 4px 20px rgba(236, 72, 153, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(236, 72, 153, 0.5);
+            opacity: 0.95;
+        }
+
+        .btn-secondary {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--panel-border);
+            color: var(--text-primary);
+            text-decoration: none;
+            padding: 0.8rem 1.8rem;
+            border-radius: 9999px;
+            font-weight: 600;
+            transition: background-color 0.2s ease, transform 0.2s ease;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
+        /* Interactive Terminal Simulator */
+        .terminal-container {
+            width: 100%;
+            max-width: 550px;
+            background: var(--terminal-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), 0 0 40px rgba(139, 92, 246, 0.1);
+            overflow: hidden;
+            text-align: left;
+            margin: 0 auto;
+        }
+
+        .terminal-header {
+            background: #18191e;
+            padding: 0.75rem 1rem;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .terminal-dots {
+            display: flex;
+            gap: 0.4rem;
+        }
+
+        .terminal-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .dot-red { background: #ef4444; }
+        .dot-yellow { background: #f59e0b; }
+        .dot-green { background: #10b981; }
+
+        .terminal-title {
+            margin-left: 2rem;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .terminal-body {
+            padding: 1.25rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            height: 380px;
+            overflow-y: auto;
+            color: #d1d5db;
+            line-height: 1.5;
+        }
+
+        /* Terminal Custom Styling classes */
+        .t-cmd { color: #f3f4f6; font-weight: 700; }
+        .t-dim { color: #6b7280; }
+        .t-purple { color: #c084fc; }
+        .t-pink { color: #f472b6; }
+        .t-cyan { color: #22d3ee; }
+        .t-green { color: #34d399; }
+        .t-yellow { color: #fbbf24; }
+        .t-red { color: #f87171; }
+        .t-bold { font-weight: 700; }
+
+        .cursor {
+            display: inline-block;
+            width: 8px;
+            height: 15px;
+            background: #c084fc;
+            animation: blink 0.8s infinite;
+            vertical-align: middle;
+            margin-left: 2px;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 0; }
+            50% { opacity: 1; }
+        }
+
+        /* Features Grid */
+        .section-title {
+            text-align: center;
+            font-size: 2.25rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            letter-spacing: -0.03em;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto 3rem;
+            font-size: 1.05rem;
+        }
+
+        .features {
+            max-width: 1200px;
+            margin: 0 auto 6rem;
+            padding: 0 1.5rem;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-card {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 16px;
+            padding: 2rem;
+            transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(12px);
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, rgba(236, 72, 153, 0.05) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(139, 92, 246, 0.3);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3), 0 0 20px rgba(139, 92, 246, 0.05);
+        }
+
+        .feature-card:hover::before {
+            opacity: 1;
+        }
+
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: rgba(139, 92, 246, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent-purple);
+            margin-bottom: 1.5rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .feature-card:hover .feature-icon {
+            background: var(--accent-gradient);
+            color: white;
+        }
+
+        .feature-card h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .feature-card p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* How it Works / Workflow */
+        .workflow {
+            background: rgba(15, 12, 26, 0.7);
+            border-y: 1px solid var(--panel-border);
+            padding: 6rem 1.5rem;
+            position: relative;
+        }
+
+        .workflow-container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .steps {
+            display: flex;
+            flex-direction: column;
+            gap: 2.5rem;
+            margin-top: 4rem;
+            position: relative;
+        }
+
+        .steps::before {
+            content: '';
+            position: absolute;
+            left: 28px;
+            top: 20px;
+            bottom: 20px;
+            width: 2px;
+            background: linear-gradient(to bottom, var(--accent-purple), var(--accent-pink), transparent);
+            z-index: 1;
+        }
+
+        @media (max-width: 640px) {
+            .steps::before {
+                left: 20px;
+            }
+        }
+
+        .step-item {
+            display: flex;
+            gap: 2rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        @media (max-width: 640px) {
+            .step-item {
+                gap: 1.25rem;
+            }
+        }
+
+        .step-badge {
+            width: 58px;
+            height: 58px;
+            border-radius: 50%;
+            background: var(--terminal-bg);
+            border: 2px solid var(--accent-purple);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+            box-shadow: 0 0 15px rgba(139, 92, 246, 0.3);
+            transition: transform 0.3s ease;
+        }
+
+        @media (max-width: 640px) {
+            .step-badge {
+                width: 42px;
+                height: 42px;
+                font-size: 1rem;
+            }
+        }
+
+        .step-item:hover .step-badge {
+            transform: scale(1.1);
+        }
+
+        .step-content {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            padding: 1.5rem 2rem;
+            flex-grow: 1;
+            backdrop-filter: blur(10px);
+        }
+
+        @media (max-width: 640px) {
+            .step-content {
+                padding: 1.25rem 1.5rem;
+            }
+        }
+
+        .step-content h4 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .step-content p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        /* Code/Setup Tabs */
+        .setup-section {
+            max-width: 800px;
+            margin: 6rem auto;
+            padding: 0 1.5rem;
+        }
+
+        .tabs-header {
+            display: flex;
+            gap: 0.5rem;
+            background: rgba(255,255,255,0.03);
+            padding: 0.35rem;
+            border-radius: 8px;
+            border: 1px solid var(--panel-border);
+            margin-bottom: 1.5rem;
+        }
+
+        .tab-btn {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            padding: 0.6rem 1rem;
+            font-family: inherit;
+            font-size: 0.9rem;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .tab-btn.active {
+            background: rgba(255,255,255,0.07);
+            color: white;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+
+        .tab-content {
+            background: var(--terminal-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            color: #d1d5db;
+            display: none;
+            position: relative;
+            overflow-x: auto;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .tab-content pre {
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--panel-border);
+            color: var(--text-secondary);
+            border-radius: 6px;
+            padding: 0.35rem 0.75rem;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .copy-btn:hover {
+            background: rgba(255, 255, 255, 0.12);
+            color: white;
+        }
+
+        /* Footer */
+        footer {
+            border-top: 1px solid var(--panel-border);
+            padding: 4rem 1.5rem 3rem;
+            text-align: center;
+            position: relative;
+            z-index: 5;
+        }
+
+        .footer-logo {
+            font-weight: 800;
+            font-size: 1.3rem;
+            margin-bottom: 1.5rem;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .footer-logo svg {
+            stroke: url(#logo-grad2);
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            list-style: none;
+            margin-bottom: 2rem;
+        }
+
+        .footer-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.2s ease;
+        }
+
+        .footer-links a:hover {
+            color: white;
+        }
+
+        .footer-text {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Gradient Orbs -->
+    <div class="glow-orb glow-1"></div>
+    <div class="glow-orb glow-2"></div>
+
+    <!-- Navigation -->
+    <nav>
+        <div class="logo">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <defs>
+                    <linearGradient id="logo-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#8b5cf6" />
+                        <stop offset="50%" stop-color="#ec4899" />
+                        <stop offset="100%" stop-color="#f43f5e" />
+                    </linearGradient>
+                </defs>
+                <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+            </svg>
+            Instagram Bot
+        </div>
+        <ul class="nav-links">
+            <li><a href="#features">Features</a></li>
+            <li><a href="#workflow">Workflow</a></li>
+            <li><a href="#setup">Setup</a></li>
+        </ul>
+        <a href="https://github.com/official-Arvind/instagram-bot" class="btn-github" target="_blank">
+            <svg height="18" width="18" viewBox="0 0 16 16" fill="currentColor" style="display:inline-block;vertical-align:middle;">
+                <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2 1.82.64-.18 1.34-.27 2.03-.27.69 0 1.39.09 2.03.27 1.53-2.03 2.2-1.82 2.2-1.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+            </svg>
+            GitHub
+        </a>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-info">
+            <div class="hero-tag">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:2px;"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                Autonomous CLI
+            </div>
+            <h1 class="hero-title">Automate Your <span>Instagram Growth</span></h1>
+            <p class="hero-desc">An interactive, high-performance terminal bot designed to scout viral reels/photos, rank them by engagement, edit captions on the fly, and post directly to your page.</p>
+            <div class="hero-actions">
+                <a href="#setup" class="btn-primary">Get Started</a>
+                <a href="https://github.com/official-Arvind/instagram-bot" class="btn-secondary" target="_blank">View Code</a>
+            </div>
+        </div>
+        
+        <!-- Animated Terminal Emulator -->
+        <div class="terminal-container">
+            <div class="terminal-header">
+                <div class="terminal-dots">
+                    <span class="terminal-dot dot-red"></span>
+                    <span class="terminal-dot dot-yellow"></span>
+                    <span class="terminal-dot dot-green"></span>
+                </div>
+                <span class="terminal-title">powershell - instagram-bot</span>
+            </div>
+            <div class="terminal-body" id="terminal-content">
+                <span class="t-dim">Initializing terminal...</span><br>
+                <span class="t-cmd">PS C:\Users\Arvind\Desktop\Instagram Bot&gt; </span><span class="cursor"></span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features">
+        <h2 class="section-title">Fully Polished Features</h2>
+        <p class="section-subtitle">No AI slop or unnecessary overhead. Designed with pure utility, speed, and premium user experience in mind.</p>
+        
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                </div>
+                <h3>Viral Scout Engine</h3>
+                <p>Scout top media across multiple hashtags. Computes a composite engagement score based on likes and views to retrieve the most viral content first.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                    </svg>
+                </div>
+                <h3>Smart Caption Replacer</h3>
+                <p>Automatically replaces the original credits/mentions with your own handle, strips out multi-tag spam lines, and keeps video courtesy and poetry notes intact.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                    </svg>
+                </div>
+                <h3>Multi-Auth System</h3>
+                <p>Flexible authentication. Supports standard username/password login, 2FA, session file resumption, and session cookie bypass.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline>
+                    </svg>
+                </div>
+                <h3>Persistent Sessions</h3>
+                <p>Login sessions are securely saved as local JSON configurations. The bot auto-resumes settings on launch, cutting login time to zero.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                </div>
+                <h3>Robust Downloads</h3>
+                <p>Downloads high-res videos and images. Generates standard Instagram-compatible thumbnails using local FFMPEG integration with custom 3x retry policies.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line>
+                    </svg>
+                </div>
+                <h3>Automated Cleanup</h3>
+                <p>Ensures zero storage bloat. Temporarily saved media downloads and cache artifacts are completely unlinked from your storage post-upload.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Workflow Section -->
+    <section id="workflow" class="workflow">
+        <div class="workflow-container">
+            <h2 class="section-title">The Posting Pipeline</h2>
+            <p class="section-subtitle">How the bot manages scouting, processing, and publishing completely autonomously.</p>
+            
+            <div class="steps">
+                <div class="step-item">
+                    <div class="step-badge">1</div>
+                    <div class="step-content">
+                        <h4>Secure Login & Session Resumption</h4>
+                        <p>The bot verifies existing local sessions. If none exist, it logs in using your choice of username/password, file uploads, or cookie values.</p>
+                    </div>
+                </div>
+
+                <div class="step-item">
+                    <div class="step-badge">2</div>
+                    <div class="step-content">
+                        <h4>Target Scouting & Engagement Metric Scoring</h4>
+                        <p>Provide multiple target hashtags. The bot fetches top performing items and ranks them with a formula: <code>engagement = (views * 0.3) + (likes * 0.7)</code>.</p>
+                    </div>
+                </div>
+
+                <div class="step-item">
+                    <div class="step-badge">3</div>
+                    <div class="step-content">
+                        <h4>Interactive Review Table</h4>
+                        <p>A formatted table displays candidates' author, view count, like count, video duration, and caption preview. You select what to post using range syntax (e.g. <code>1-3,5</code>, or <code>all</code>).</p>
+                    </div>
+                </div>
+
+                <div class="step-item">
+                    <div class="step-badge">4</div>
+                    <div class="step-content">
+                        <h4>Caption Re-Engineering & Asset Uploading</h4>
+                        <p>The bot downloads selected media, converts/generates thumbnails, polishes captions (injecting your page's username), uploads them via private Instagram API, and safely cleans up temporary assets.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Setup / Code Tabs Section -->
+    <section id="setup" class="setup-section">
+        <h2 class="section-title">Quick Installation</h2>
+        <p class="section-subtitle">Choose your operating system to set up and run the bot in minutes.</p>
+
+        <div class="tabs-header">
+            <button class="tab-btn active" onclick="switchTab('windows')">Windows</button>
+            <button class="tab-btn" onclick="switchTab('linux-mac')">macOS / Linux</button>
+        </div>
+
+        <div id="windows" class="tab-content active">
+            <button class="copy-btn" onclick="copyCode('windows-code')">Copy</button>
+            <pre id="windows-code"># 1. Clone the repository
+git clone https://github.com/official-Arvind/instagram-bot.git
+cd instagram-bot
+
+# 2. Run one-click setup script
+setup.bat
+
+# 3. Start the interactive bot
+run.bat</pre>
+        </div>
+
+        <div id="linux-mac" class="tab-content">
+            <button class="copy-btn" onclick="copyCode('linux-code')">Copy</button>
+            <pre id="linux-code"># 1. Clone the repository
+git clone https://github.com/official-Arvind/instagram-bot.git
+cd instagram-bot
+
+# 2. Create virtual environment & install dependencies
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+
+# 3. Start the bot
+python bot.py</pre>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-logo">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <defs>
+                    <linearGradient id="logo-grad2" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#8b5cf6" />
+                        <stop offset="50%" stop-color="#ec4899" />
+                        <stop offset="100%" stop-color="#f43f5e" />
+                    </linearGradient>
+                </defs>
+                <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+            </svg>
+            Instagram Bot
+        </div>
+        <ul class="footer-links">
+            <li><a href="#features">Features</a></li>
+            <li><a href="#workflow">Workflow</a></li>
+            <li><a href="#setup">Setup</a></li>
+            <li><a href="https://github.com/official-Arvind/instagram-bot" target="_blank">Repository</a></li>
+        </ul>
+        <div class="footer-text">
+            <p>&copy; 2026 Arvind Ji. Released under the MIT License.</p>
+            <p style="margin-top:0.5rem;font-size:0.75rem;opacity:0.6;">Uses instagrapi client library. This tool is not affiliated with, authorized, or endorsed by Meta Platforms Inc.</p>
+        </div>
+    </footer>
+
+    <!-- Terminal Simulator Script -->
+    <script>
+        // Tab switching logic
+        function switchTab(os) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(os).classList.add('active');
+        }
+
+        // Copy code helper
+        function copyCode(id) {
+            const code = document.getElementById(id).innerText;
+            navigator.clipboard.writeText(code).then(() => {
+                const btn = event.target;
+                btn.innerText = 'Copied!';
+                setTimeout(() => {
+                    btn.innerText = 'Copy';
+                }, 2000);
+            });
+        }
+
+        // Interactive Terminal Simulator script
+        const terminal = document.getElementById('terminal-content');
+        
+        const script = [
+            { type: 'input', text: 'venv\\Scripts\\python bot.py' },
+            { type: 'output', text: '\n<span class="t-purple t-bold">  ██╗███╗   ██╗███████╗████████╗ █████╗  ██████╗  ██████╗ ████████╗</span>\n<span class="t-purple t-bold">  ██║████╗  ██║██╔════╝╚══██╔══╝██╔══██╗██╔══██╗██╔═══██╗╚══██╔══╝</span>\n<span class="t-purple t-bold">  ██║██╔██╗ ██║███████╗   ██║   ███████║██████╔╝██║   ██║   ██║   </span>\n<span class="t-purple t-bold">  ██║██║╚██╗██║╚════██║   ██║   ██╔══██║██╔══██╗██║   ██║   ██║   </span>\n<span class="t-purple t-bold">  ██║██║ ╚████║███████║   ██║   ██║  ██║██████╔╝╚██████╔╝   ██║   </span>\n<span class="t-purple t-bold">  ╚═╝╚═╝  ╚═══╝╚══════╝   ╚═╝   ╚═╝  ╚═╝╚═════╝  ╚═════╝    ╚═╝   </span>\n\n  ┌──────────────────────────────────────────────────────────┐\n  │ <span class="t-bold">Autonomous Instagram Content Bot</span>                         │\n  │ <span class="t-dim">Scout  •  Download  •  Caption Edit  •  Post</span>             │\n  └──────────────────────────────────────────────────────────┘\n' },
+            { type: 'output', text: '<span class="t-cyan t-bold">─── Login ───────────────────────────────────────────────────────────</span>\n  <span class="t-green">Saved sessions found:</span>\n    1.  shayari_poetry_hub\n    2.  Login with a new account\n\n  <span class="t-bold">Select [1-2] (default 1):</span> ' },
+            { type: 'input', text: '1', delay: 1000 },
+            { type: 'output', text: '  <span class="t-dim">Resuming session for shayari_poetry_hub...</span>\n  <span class="t-green t-bold">✓ Logged in as @shayari_poetry_hub</span>\n\n' },
+            { type: 'output', text: '<span class="t-cyan t-bold">─── Step 1 — Hashtags ──────────────────────────────────────────────</span>\n  <span class="t-dim">Enter hashtags separated by commas. No # needed.</span>\n\n  <span class="t-cyan t-bold">Hashtags:</span> ' },
+            { type: 'input', text: 'urdupoetry, shayari', delay: 1500 },
+            { type: 'output', text: '\n  <span class="t-dim">Searching:</span> <span class="t-cyan">#urdupoetry</span>  <span class="t-cyan">#shayari</span>\n\n' },
+            { type: 'output', text: '<span class="t-cyan t-bold">─── Step 2 — Content Type ──────────────────────────────────────────</span>\n  <span class="t-cyan t-bold">[1]</span>  🎬  Reels\n  <span class="t-cyan t-bold">[2]</span>  📖  Stories\n  <span class="t-cyan t-bold">[3]</span>  🖼️   Photos\n  <span class="t-cyan t-bold">[4]</span>  🎵  Photos with Music\n\n  <span class="t-bold">Select [1-4] (default 1):</span> ' },
+            { type: 'input', text: '1', delay: 1000 },
+            { type: 'output', text: '\n  <span class="t-dim">Type selected:</span> <span class="t-bold">🎬  Reels</span>\n\n' },
+            { type: 'output', text: '<span class="t-cyan t-bold">─── Step 3 — How Many? ─────────────────────────────────────────────</span>\n  <span class="t-dim">How many pieces of content should the bot scout for you?</span>\n\n  <span class="t-cyan t-bold">Count (default 10):</span> ' },
+            { type: 'input', text: '4', delay: 1200 },
+            { type: 'output', text: '\n\n<span class="t-cyan t-bold">─── Step 4 — Scouting Content ──────────────────────────────────────</span>\n  <span class="t-dim">Fetching top 4 reels across 2 hashtag(s)...</span>\n  <span class="t-cyan">⠋ Scouting hashtags... [██████████████████████████████] 100%</span>\n\n' },
+            { type: 'output', text: '<span class="t-green t-bold">─── Results ────────────────────────────────────────────────────────</span>\n  ┌──────────────────────────────────────────────────────────────────┐\n  │ <span class="t-bold">#</span>    <span class="t-purple t-bold">Author</span>           <span class="t-green t-bold">👁 Views</span>     <span class="t-red t-bold">❤ Likes</span>   <span class="t-yellow t-bold">⏱ Dur</span>    <span class="t-bold">Caption</span>        │\n  ├──────────────────────────────────────────────────────────────────┤\n  │ 1    @poetry_kingdom  2,450,123   182,340   15s      Dard ki sh...  │\n  │ 2    @urdulines.hub   1,890,404   124,591   21s      Woh baat j...  │\n  │ 3    @mushaira.vibes  1,120,442    98,203   29s      Aankhein b...  │\n  │ 4    @sher_o_sukhan     890,203    74,320   12s      Batao kais...  │\n  └──────────────────────────────────────────────────────────────────┘\n  <span class="t-dim">Total found: 4 results</span>\n\n' },
+            { type: 'output', text: '<span class="t-cyan t-bold">─── Step 4 — Select Content ────────────────────────────────────────</span>\n  <span class="t-dim">Enter numbers to post. Examples:</span>\n    <span class="t-cyan">1,3,5</span>  → post items 1, 3 and 5\n    <span class="t-cyan">1-4</span>    → post items 1 through 4\n    <span class="t-cyan">all</span>    → post everything\n\n  <span class="t-cyan t-bold">Your selection:</span> ' },
+            { type: 'input', text: '1,3', delay: 1500 },
+            { type: 'output', text: '\n  <span class="t-green t-bold">✓ Selected 2 item(s):</span> <span class="t-cyan">#1</span>, <span class="t-cyan">#3</span>\n\n  <span class="t-bold">Post 2 item(s) to @shayari_poetry_hub? [y/N] (default y):</span> ' },
+            { type: 'input', text: 'y', delay: 800 },
+            { type: 'output', text: '\n\n<span class="t-pink t-bold">─── Posting... ─────────────────────────────────────────────────────</span>\n\n  <span class="t-bold">[1/2]</span> @poetry_kingdom — https://www.instagram.com/reel/C5x92A/\n    <span class="t-dim">Downloading video...</span>\n    <span class="t-dim">Generating thumbnail...</span>\n    <span class="t-dim">Uploading Reel...</span>\n    <span class="t-green t-bold">✅ Posted!</span> https://www.instagram.com/reel/C9a2kL/\n\n  <span class="t-bold">[2/2]</span> @mushaira.vibes — https://www.instagram.com/reel/D3j82p/\n    <span class="t-dim">Downloading video...</span>\n    <span class="t-dim">Generating thumbnail...</span>\n    <span class="t-dim">Uploading Reel...</span>\n    <span class="t-green t-bold">✅ Posted!</span> https://www.instagram.com/reel/C9a2xP/\n\n' },
+            { type: 'output', text: '<span class="t-green t-bold">─── Summary ────────────────────────────────────────────────────────</span>\n  <span class="t-green t-bold">✅ 2 posted successfully</span>\n\n  🎬 Reel    @poetry_kingdom   <span class="t-green">https://www.instagram.com/reel/C9a2kL/</span>\n  🎬 Reel    @mushaira.vibes   <span class="t-green">https://www.instagram.com/reel/C9a2xP/</span>\n\n  <span class="t-bold">Post more content? [y/N] (default y):</span> ' },
+            { type: 'input', text: 'n', delay: 1000 },
+            { type: 'output', text: '\n\n  <span class="t-green t-bold">Session saved. See you soon! 👋</span>\n  <span class="t-dim">Account: @shayari_poetry_hub</span>\n\n' }
+        ];
+
+        let lineIdx = 0;
+        let charIdx = 0;
+        const speed = 40; // Typing speed
+
+        function playTerminal() {
+            if (lineIdx >= script.length) {
+                // Restart after 5 seconds
+                setTimeout(() => {
+                    terminal.innerHTML = '<span class="t-dim">Initializing terminal...</span><br><span class="t-cmd">PS C:\\Users\\Arvind\\Desktop\\Instagram Bot&gt; </span><span class="cursor"></span>';
+                    lineIdx = 0;
+                    charIdx = 0;
+                    playTerminal();
+                }, 6000);
+                return;
+            }
+
+            const step = script[lineIdx];
+            const cursor = terminal.querySelector('.cursor');
+            if (cursor) cursor.remove();
+
+            if (step.type === 'input') {
+                // Typings
+                let inputSpan = document.createElement('span');
+                inputSpan.className = 't-cmd';
+                terminal.appendChild(inputSpan);
+                
+                let cursorSpan = document.createElement('span');
+                cursorSpan.className = 'cursor';
+                terminal.appendChild(cursorSpan);
+
+                function typeChar() {
+                    if (charIdx < step.text.length) {
+                        inputSpan.innerHTML += step.text[charIdx];
+                        charIdx++;
+                        setTimeout(typeChar, speed + Math.random() * 30);
+                    } else {
+                        // Done typing this input
+                        charIdx = 0;
+                        lineIdx++;
+                        terminal.innerHTML += '<br>';
+                        setTimeout(playTerminal, step.delay || 500);
+                    }
+                }
+                setTimeout(typeChar, 300);
+
+            } else if (step.type === 'output') {
+                // Instantly append output html
+                let outputDiv = document.createElement('div');
+                outputDiv.style.whiteSpace = 'pre-wrap';
+                outputDiv.innerHTML = step.text;
+                terminal.appendChild(outputDiv);
+                
+                let cursorSpan = document.createElement('span');
+                cursorSpan.className = 'cursor';
+                terminal.appendChild(cursorSpan);
+                
+                // Scroll to bottom
+                terminal.scrollTop = terminal.scrollHeight;
+                
+                lineIdx++;
+                setTimeout(playTerminal, step.delay || 800);
+            }
+        }
+
+        // Start terminal simulation
+        setTimeout(playTerminal, 1500);
+    </script>
+</body>
+</html>

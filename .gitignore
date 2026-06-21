@@ -1,0 +1,28 @@
+# Virtual environment
+venv/
+.venv/
+env/
+
+# Python caching
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Downloaded/scouted media (temporary files)
+downloads/
+*.mp4
+*.jpg
+*.webp
+*.png
+
+# Session data & credentials
+sessions/*.json
+sessions/
+.env
+
+# IDE / System files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

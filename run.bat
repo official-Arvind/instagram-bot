@@ -1,5 +1,5 @@
 @echo off
-set PYTHONIOENCODING=utf-8
-venv\Scripts\python bot.py
+chcp 65001 >nul
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0run.ps1"
 pause
 

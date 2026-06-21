@@ -51,7 +51,7 @@ def _is_spam_line(line: str) -> bool:
     return False
 
 
-def smart_replace(caption: str, logged_in_username: str) -> str:
+def smart_replace(caption: str, logged_in_username: str, tags: list[str] = None) -> str:
     """
     Process a caption intelligently:
     - Replace 'follow @xxx' patterns with logged-in username
@@ -60,7 +60,9 @@ def smart_replace(caption: str, logged_in_username: str) -> str:
     - Ensure our account handle appears in the caption
     """
     if not caption:
-        return f"Follow @{logged_in_username} for more beautiful poetry 🖤\n\n#urdupoetry #shayari #poetry"
+        tags_list = tags if tags else ["explore", "viral", "instagram"]
+        hashtag_str = " ".join(f"#{t.lower()}" for t in tags_list)
+        return f"Follow @{logged_in_username} for more! 🖤\n\n{hashtag_str}"
 
     lines = caption.split('\n')
     cleaned_lines = []

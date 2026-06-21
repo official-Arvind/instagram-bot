@@ -11,7 +11,7 @@ console = Console()
 
 CONTENT_FILTERS = {
     "reel":   lambda m: m.media_type == 2 and getattr(m, 'product_type', '') == 'clips',
-    "story":  lambda m: m.media_type == 2 and getattr(m, 'product_type', '') == 'clips',  # Short clips work as stories
+    "story":  lambda m: m.media_type in (1, 2),  # Both photos and videos can be posted as stories
     "photo":  lambda m: m.media_type == 1,
     "photomusic": lambda m: m.media_type == 1,
 }
@@ -27,18 +27,32 @@ def _score(media) -> float:
 def _to_dict(media, cl) -> dict | None:
     """Convert instagrapi media object to a clean dict. Returns None on failure."""
     try:
-        fresh = cl.media_info(media.pk)
+        # Check if the media object already has the required details to avoid extra API calls
+        has_details = False
+        if media.media_type == 1:  # Photo
+            has_details = bool(getattr(media, 'thumbnail_url', None))
+        elif media.media_type == 2:  # Video
+            has_details = bool(getattr(media, 'video_url', None))
+        
+        if has_details:
+            fresh = media
+        else:
+            fresh = cl.media_info(media.pk)
+
         views = getattr(fresh, 'view_count', 0) or getattr(fresh, 'play_count', 0) or 0
         likes = getattr(fresh, 'like_count', 0) or 0
         duration = getattr(fresh, 'video_duration', 0) or 0
         caption = getattr(fresh, 'caption_text', '') or ''
+        author = getattr(fresh.user, 'username', '') if getattr(fresh, 'user', None) else ''
+        if not author and hasattr(fresh, 'username'):
+            author = fresh.username
 
         return {
             "pk": int(fresh.pk),
             "id": fresh.id,
             "code": fresh.code,
             "url": f"https://www.instagram.com/reel/{fresh.code}/" if fresh.media_type == 2 else f"https://www.instagram.com/p/{fresh.code}/",
-            "author": fresh.user.username,
+            "author": author,
             "views": views,
             "likes": likes,
             "duration": duration,
@@ -49,7 +63,31 @@ def _to_dict(media, cl) -> dict | None:
             "score": views * 0.3 + likes * 0.7,
         }
     except Exception:
-        return None
+        # Fallback to fetching full info on any error or missing fields
+        try:
+            fresh = cl.media_info(media.pk)
+            views = getattr(fresh, 'view_count', 0) or getattr(fresh, 'play_count', 0) or 0
+            likes = getattr(fresh, 'like_count', 0) or 0
+            duration = getattr(fresh, 'video_duration', 0) or 0
+            caption = getattr(fresh, 'caption_text', '') or ''
+            return {
+                "pk": int(fresh.pk),
+                "id": fresh.id,
+                "code": fresh.code,
+                "url": f"https://www.instagram.com/reel/{fresh.code}/" if fresh.media_type == 2 else f"https://www.instagram.com/p/{fresh.code}/",
+                "author": fresh.user.username,
+                "views": views,
+                "likes": likes,
+                "duration": duration,
+                "caption": caption,
+                "video_url": str(getattr(fresh, 'video_url', '') or ''),
+                "thumbnail_url": str(getattr(fresh, 'thumbnail_url', '') or ''),
+                "media_type": fresh.media_type,
+                "score": views * 0.3 + likes * 0.7,
+            }
+        except Exception:
+            return None
+
 
 
 def search_content(cl, hashtags: list[str], content_type: str, target_count: int) -> list[dict]:

@@ -179,7 +179,7 @@ def get_selection(candidates: list[dict]) -> list[dict]:
     return selected
 
 
-def process_and_post(cl, username: str, items: list[dict], content_type: str) -> list[dict]:
+def process_and_post(cl, username: str, items: list[dict], content_type: str, hashtags: list[str] = None) -> list[dict]:
     """Download, edit captions, and upload all selected items."""
     console.print()
     console.print(Rule("[bold magenta]Posting...[/bold magenta]", style="magenta"))
@@ -201,7 +201,7 @@ def process_and_post(cl, username: str, items: list[dict], content_type: str) ->
 
         # Edit caption
         raw_caption = item.get("caption", "")
-        new_caption = caption.smart_replace(raw_caption, username)
+        new_caption = caption.smart_replace(raw_caption, username, hashtags)
 
         # Upload
         result = uploader.post(cl, content_type, vid_path, thumb_path, new_caption)
@@ -284,7 +284,7 @@ def main():
             # Confirm
             console.print()
             if Confirm.ask(f"  [bold]Post {len(selected)} item(s) to @{username}?[/bold]", default=True):
-                results = process_and_post(cl, username, selected, content_type)
+                results = process_and_post(cl, username, selected, content_type, hashtags)
                 show_summary(results)
             else:
                 console.print("  [yellow]Cancelled.[/yellow]")

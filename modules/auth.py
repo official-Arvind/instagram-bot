@@ -137,11 +137,12 @@ def login_flow() -> tuple[Client, str]:
         for i, s in enumerate(saved, 1):
             table.add_row(str(i), s.stem)
         console.print(table)
-        console.print(f"  [{len(saved)+1}] Login with a new account\n")
+        console.print(f"  [{len(saved)+1}] Login with a new account")
+        console.print(f"  [{len(saved)+2}] Remove a saved account\n")
 
         choice = Prompt.ask(
             "  [bold]Select[/bold]",
-            choices=[str(i) for i in range(1, len(saved) + 2)],
+            choices=[str(i) for i in range(1, len(saved) + 3)],
             default="1"
         )
         idx = int(choice) - 1
@@ -154,6 +155,21 @@ def login_flow() -> tuple[Client, str]:
                 return cl, path.stem
             else:
                 console.print("  [yellow]Session expired. Please login again.[/yellow]")
+        elif idx == len(saved) + 1:
+            console.print("\n[bold red]Select an account to remove:[/bold red]")
+            for i, s in enumerate(saved, 1):
+                console.print(f"  [bold red][{i}][/bold red] @{s.stem}")
+            remove_choice = Prompt.ask(
+                "\n  [bold]Select account to delete[/bold]",
+                choices=[str(i) for i in range(1, len(saved) + 1)]
+            )
+            to_remove = saved[int(remove_choice) - 1]
+            try:
+                to_remove.unlink()
+                console.print(f"\n  [bold green]✓ Successfully removed @{to_remove.stem} session file.[/bold green]")
+            except Exception as e:
+                console.print(f"\n  [bold red]❌ Failed to remove file: {e}[/bold red]")
+            return login_flow()
 
     # Fresh login
     console.print("\n[bold]How would you like to login?[/bold]")

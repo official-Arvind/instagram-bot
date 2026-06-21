@@ -786,8 +786,8 @@
                         <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline>
                     </svg>
                 </div>
-                <h3>Persistent Sessions</h3>
-                <p>Login sessions are securely saved as local JSON configurations. The bot auto-resumes settings on launch, cutting login time to zero.</p>
+                <h3>Session Manager</h3>
+                <p>Login sessions are securely saved as local JSON configs. The bot auto-resumes settings on launch, and allows you to delete/remove saved accounts directly from the login menu.</p>
             </div>
 
             <div class="feature-card">
@@ -951,7 +951,7 @@ python bot.py</pre>
         const script = [
             { type: 'input', text: 'venv\\Scripts\\python bot.py' },
             { type: 'output', text: '\n<span class="t-purple t-bold">  ██╗███╗   ██╗███████╗████████╗ █████╗  ██████╗  ██████╗ ████████╗</span>\n<span class="t-purple t-bold">  ██║████╗  ██║██╔════╝╚══██╔══╝██╔══██╗██╔══██╗██╔═══██╗╚══██╔══╝</span>\n<span class="t-purple t-bold">  ██║██╔██╗ ██║███████╗   ██║   ███████║██████╔╝██║   ██║   ██║   </span>\n<span class="t-purple t-bold">  ██║██║╚██╗██║╚════██║   ██║   ██╔══██║██╔══██╗██║   ██║   ██║   </span>\n<span class="t-purple t-bold">  ██║██║ ╚████║███████║   ██║   ██║  ██║██████╔╝╚██████╔╝   ██║   </span>\n<span class="t-purple t-bold">  ╚═╝╚═╝  ╚═══╝╚══════╝   ╚═╝   ╚═╝  ╚═╝╚═════╝  ╚═════╝    ╚═╝   </span>\n\n  ┌──────────────────────────────────────────────────────────┐\n  │ <span class="t-bold">Autonomous Instagram Content Bot</span>                         │\n  │ <span class="t-dim">Scout  •  Download  •  Caption Edit  •  Post</span>             │\n  └──────────────────────────────────────────────────────────┘\n' },
-            { type: 'output', text: '<span class="t-cyan t-bold">─── Login ───────────────────────────────────────────────────────────</span>\n  <span class="t-green">Saved sessions found:</span>\n    1.  shayari_poetry_hub\n    2.  Login with a new account\n\n  <span class="t-bold">Select [1-2] (default 1):</span> ' },
+            { type: 'output', text: '<span class="t-cyan t-bold">─── Login ───────────────────────────────────────────────────────────</span>\n  <span class="t-green">Saved sessions found:</span>\n    1.  shayari_poetry_hub\n    2.  Login with a new account\n    3.  Remove a saved account\n\n  <span class="t-bold">Select [1-3] (default 1):</span> ' },
             { type: 'input', text: '1', delay: 1000 },
             { type: 'output', text: '  <span class="t-dim">Resuming session for shayari_poetry_hub...</span>\n  <span class="t-green t-bold">✓ Logged in as @shayari_poetry_hub</span>\n\n' },
             { type: 'output', text: '<span class="t-cyan t-bold">─── Step 1 — Hashtags ──────────────────────────────────────────────</span>\n  <span class="t-dim">Enter hashtags separated by commas. No # needed.</span>\n\n  <span class="t-cyan t-bold">Hashtags:</span> ' },

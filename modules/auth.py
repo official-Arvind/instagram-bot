@@ -110,6 +110,13 @@ def _login_session_cookie(cl: Client) -> tuple[str, bool]:
         return "", False
 
 
+def challenge_code_handler(username: str, choice) -> str:
+    console.print(f"\n  [yellow]⚠ Instagram security challenge triggered for @{username}![/yellow]")
+    console.print(f"  [yellow]Verification code sent via: {choice}[/yellow]")
+    code = Prompt.ask("  [cyan]Enter verification code[/cyan]")
+    return code.strip()
+
+
 def login_flow() -> tuple[Client, str]:
     """
     Full login flow. Returns (Client, logged_in_username).
@@ -117,6 +124,8 @@ def login_flow() -> tuple[Client, str]:
     """
     cl = Client()
     cl.delay_range = [1, 3]  # Be polite with the API
+    cl.challenge_code_handler = challenge_code_handler
+
 
     # Check saved sessions
     saved = _list_saved_sessions()

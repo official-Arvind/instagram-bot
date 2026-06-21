@@ -80,22 +80,38 @@ def upload_photo(cl, image_path: Path, caption: str) -> dict | None:
         return None
 
 
-def post(cl, content_type: str, video_path: Path | None, thumb_path: Path | None, caption: str) -> dict | None:
+def post(cl, content_type: str, video_path: Path | None, thumb_path: Path | None, caption: str, retries: int = 3) -> dict | None:
     """
-    Universal post function. Routes to the correct upload based on content_type.
+    Universal post function with auto-retry. Routes to the correct upload based on content_type.
     
     content_type: 'reel', 'story', 'photo', 'photomusic'
     """
-    if content_type == "reel":
-        return upload_reel(cl, video_path, thumb_path, caption)
-    elif content_type == "story":
-        if video_path and str(video_path).endswith(".mp4"):
-            return upload_story_video(cl, video_path, thumb_path)
-        else:
-            return upload_story_photo(cl, thumb_path or video_path)
-    elif content_type in ("photo", "photomusic"):
-        img = thumb_path or video_path
-        return upload_photo(cl, img, caption)
-    else:
-        console.print(f"    [red]Unknown content type: {content_type}[/red]")
-        return None
+    for attempt in range(1, retries + 1):
+        try:
+            result = None
+            if content_type == "reel":
+                result = upload_reel(cl, video_path, thumb_path, caption)
+            elif content_type == "story":
+                if video_path and str(video_path).endswith(".mp4"):
+                    result = upload_story_video(cl, video_path, thumb_path)
+                else:
+                    result = upload_story_photo(cl, thumb_path or video_path)
+            elif content_type in ("photo", "photomusic"):
+                img = thumb_path or video_path
+                result = upload_photo(cl, img, caption)
+            else:
+                console.print(f"    [red]Unknown content type: {content_type}[/red]")
+                return None
+
+            if result is not None:
+                return result
+
+        except Exception as e:
+            console.print(f"    [yellow]Upload attempt {attempt}/{retries} raised exception: {e}[/yellow]")
+
+        if attempt < retries:
+            sleep_time = 5 * attempt
+            console.print(f"    [yellow]Upload attempt {attempt}/{retries} failed. Retrying in {sleep_time}s...[/yellow]")
+            time.sleep(sleep_time)
+
+    return None

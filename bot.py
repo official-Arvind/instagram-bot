@@ -107,12 +107,11 @@ def display_candidates(candidates: list[dict]) -> None:
         header_style="bold magenta",
         border_style="dim",
         padding=(0, 1),
-        expand=True,
     )
     table.add_column("#",        style="bold white",  width=4,  no_wrap=True)
-    table.add_column("Author",   style="cyan",        width=22, no_wrap=True)
-    table.add_column("👁 Views",  style="green",       width=10, no_wrap=True, justify="right")
-    table.add_column("❤ Likes",  style="red",         width=10, no_wrap=True, justify="right")
+    table.add_column("Author (Ctrl+Click to view)", style="cyan", width=26, no_wrap=True)
+    table.add_column("👁 Views",  style="green",       width=12, no_wrap=True, justify="right")
+    table.add_column("❤ Likes",  style="red",         width=12, no_wrap=True, justify="right")
     table.add_column("⏱ Dur",    style="yellow",      width=8,  no_wrap=True, justify="right")
     table.add_column("Caption Preview",               min_width=30)
 
@@ -121,7 +120,11 @@ def display_candidates(candidates: list[dict]) -> None:
         views = f"{c['views']:,}" if c.get("views") else "—"
         likes = f"{c['likes']:,}" if c.get("likes") else "—"
         cap_prev = caption.preview(c.get("caption", ""))
-        table.add_row(str(i), f"@{c['author']}", views, likes, dur, cap_prev)
+        
+        # Create clickable terminal hyperlink to the post URL
+        author_text = Text.from_markup(f"[link={c['url']}]@{c['author']}[/link]", style="cyan")
+        
+        table.add_row(str(i), author_text, views, likes, dur, cap_prev)
 
     console.print(table)
     console.print(f"\n  [dim]Total found: {len(candidates)} results[/dim]")

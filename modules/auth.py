@@ -74,8 +74,6 @@ def _login_username_password(cl: Client) -> tuple[str, bool]:
         console.print("  [yellow]Instagram sent a challenge (check your email/phone).[/yellow]")
         try:
             cl.challenge_resolve(cl.last_json)
-            code = Prompt.ask("  Enter challenge code")
-            cl.challenge_resolve(cl.last_json, code)
             return username, True
         except Exception as e:
             console.print(f"  [red]Challenge failed: {e}[/red]")

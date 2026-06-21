@@ -50,10 +50,10 @@ BANNER = r"""
 [/bold magenta]"""
 
 CONTENT_TYPES = {
-    "1": ("reel",       "🎬  Reels"),
-    "2": ("story",      "📖  Stories"),
-    "3": ("photo",      "🖼️   Photos"),
-    "4": ("photomusic", "🎵  Photos with Music"),
+    "1": ("reel",       "Reels"),
+    "2": ("story",      "Stories"),
+    "3": ("photo",      "Photos"),
+    "4": ("photomusic", "Photos with Music"),
 }
 
 # ─────────────────────────────────────────────────────
@@ -94,7 +94,7 @@ def get_content_type() -> str:
     ctype, label = CONTENT_TYPES[choice]
     console.print(f"\n  [dim]Type selected:[/dim] [bold]{label}[/bold]")
     if ctype == "photomusic":
-        console.print("  [yellow]⚠ Note: Music attachments are currently unsupported by instagrapi. Posting as standard Photo.[/yellow]")
+        console.print("  [yellow]! Note: Music attachments are currently unsupported by instagrapi. Posting as standard Photo.[/yellow]")
     return ctype
 
 
@@ -121,9 +121,9 @@ def display_candidates(candidates: list[dict]) -> None:
     )
     table.add_column("#",        style="bold white",  width=3,  no_wrap=True)
     table.add_column("Author (Ctrl+Click to view)", style="cyan", width=22, no_wrap=True)
-    table.add_column("👁 Views",  style="green",       width=10, no_wrap=True, justify="right")
-    table.add_column("❤ Likes",  style="red",         width=10, no_wrap=True, justify="right")
-    table.add_column("⏱ Dur",    style="yellow",      width=6,  no_wrap=True, justify="right")
+    table.add_column("Views",    style="green",       width=10, no_wrap=True, justify="right")
+    table.add_column("Likes",    style="red",         width=10, no_wrap=True, justify="right")
+    table.add_column("Dur",      style="yellow",      width=6,  no_wrap=True, justify="right")
     table.add_column("Caption Preview",               min_width=20)
 
     for i, c in enumerate(candidates, 1):
@@ -190,7 +190,7 @@ def get_selection(candidates: list[dict]) -> list[dict]:
         return get_selection(candidates)
 
     selected = [candidates[i] for i in indices]
-    console.print(f"\n  [bold green]✓ Selected {len(selected)} item(s):[/bold green] " +
+    console.print(f"\n  [bold green]* Selected {len(selected)} item(s):[/bold green] " +
                   ", ".join(f"[cyan]#{i+1}[/cyan]" for i in indices))
     return selected
 
@@ -211,7 +211,7 @@ def process_and_post(cl, username: str, items: list[dict], content_type: str, ha
         vid_path, thumb_path = downloader.download_media(item, slot)
 
         if vid_path is None and thumb_path is None:
-            console.print("    [red]⚠ Skipping — download failed.[/red]")
+            console.print("    [red]! Skipping — download failed.[/red]")
             results.append({"error": "download_failed", "url": item["url"]})
             continue
 
@@ -231,12 +231,12 @@ def process_and_post(cl, username: str, items: list[dict], content_type: str, ha
         downloader.cleanup(files_to_clean)
 
         if result:
-            console.print(f"    [bold green]✅ Posted![/bold green] {result['url']}")
+            console.print(f"    [bold green][SUCCESS] Posted![/bold green] {result['url']}")
             result["original_url"] = item["url"]
             result["author"] = item["author"]
             results.append(result)
         else:
-            console.print(f"    [red]❌ Upload failed.[/red]")
+            console.print(f"    [red][FAILURE] Upload failed.[/red]")
             results.append({"error": "upload_failed", "url": item["url"]})
 
     return results
@@ -249,8 +249,8 @@ def show_summary(results: list[dict]):
     success = [r for r in results if "url" in r and "error" not in r]
     failed  = [r for r in results if "error" in r]
 
-    console.print(f"\n  [bold green]✅ {len(success)} posted successfully[/bold green]"
-                  + (f"   [red]❌ {len(failed)} failed[/red]" if failed else ""))
+    console.print(f"\n  [bold green][SUCCESS] {len(success)} posted successfully[/bold green]"
+                  + (f"   [red][FAILURE] {len(failed)} failed[/red]" if failed else ""))
 
     if success:
         table = Table(box=box.SIMPLE, header_style="bold", border_style="dim")
@@ -274,7 +274,7 @@ def main():
     # ── Login ──
     console.print(Rule("[bold cyan]Login[/bold cyan]", style="cyan"))
     cl, username = auth.login_flow()
-    console.print(f"\n  [bold green]✓ Ready to post as @{username}[/bold green]\n")
+    console.print(f"\n  [bold green]* Ready to post as @{username}[/bold green]\n")
 
     # ── Main loop ──
     while True:
@@ -291,7 +291,7 @@ def main():
         candidates = scout.search_content(cl, hashtags, content_type, count)
 
         if not candidates:
-            console.print("\n  [yellow]⚠ No content found for those hashtags/type. Try different hashtags.[/yellow]")
+            console.print("\n  [yellow]! No content found for those hashtags/type. Try different hashtags.[/yellow]")
         else:
             # Display & select
             display_candidates(candidates)
@@ -313,7 +313,7 @@ def main():
     # ── Exit ──
     console.print()
     console.print(Panel(
-        f"[bold green]Session saved. See you soon! 👋[/bold green]\n"
+        f"[bold green]Session saved. See you soon![/bold green]\n"
         f"[dim]Account: @{username}[/dim]",
         border_style="green",
         padding=(0, 4),

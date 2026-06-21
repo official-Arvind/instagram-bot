@@ -174,7 +174,7 @@ def search_content(cl, hashtags: list[str], content_type: str, target_count: int
 
                     time.sleep(0.3)  # Rate limit courtesy
             except Exception as e:
-                console.print(f"  [yellow]⚠ #{tag}: {e}[/yellow]")
+                console.print(f"  [yellow]! #{tag}: {e}[/yellow]")
 
             progress.advance(task)
 

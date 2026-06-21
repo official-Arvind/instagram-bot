@@ -118,7 +118,7 @@ def _login_session_cookie(cl: Client) -> tuple[str, bool]:
 
 
 def challenge_code_handler(username: str, choice) -> str:
-    console.print(f"\n  [yellow]⚠ Instagram security challenge triggered for @{username}![/yellow]")
+    console.print(f"\n  [yellow]! Instagram security challenge triggered for @{username}![/yellow]")
     console.print(f"  [yellow]Verification code sent via: {choice}[/yellow]")
     code = Prompt.ask("  [cyan]Enter verification code[/cyan]")
     return code.strip()
@@ -158,7 +158,7 @@ def login_flow() -> tuple[Client, str]:
             path = saved[idx]
             console.print(f"  [dim]Resuming session for [cyan]{path.stem}[/cyan]...[/dim]")
             if _try_resume_session(cl, path):
-                console.print(f"  [bold green]✓ Logged in as @{path.stem}[/bold green]")
+                console.print(f"  [bold green]* Logged in as @{path.stem}[/bold green]")
                 return cl, path.stem
             else:
                 console.print("  [yellow]Session expired. Please login again.[/yellow]")
@@ -173,9 +173,9 @@ def login_flow() -> tuple[Client, str]:
             to_remove = saved[int(remove_choice) - 1]
             try:
                 to_remove.unlink()
-                console.print(f"\n  [bold green]✓ Successfully removed @{to_remove.stem} session file.[/bold green]")
+                console.print(f"\n  [bold green]* Successfully removed @{to_remove.stem} session file.[/bold green]")
             except Exception as e:
-                console.print(f"\n  [bold red]❌ Failed to remove file: {e}[/bold red]")
+                console.print(f"\n  [bold red][FAILURE] Failed to remove file: {e}[/bold red]")
             return login_flow()
 
     # Fresh login
@@ -199,5 +199,5 @@ def login_flow() -> tuple[Client, str]:
         return login_flow()  # Retry
 
     _save_session(cl, username)
-    console.print(f"\n  [bold green]✓ Logged in as @{username}[/bold green]")
+    console.print(f"\n  [bold green]* Logged in as @{username}[/bold green]")
     return cl, username

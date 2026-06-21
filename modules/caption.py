@@ -62,7 +62,7 @@ def smart_replace(caption: str, logged_in_username: str, tags: list[str] = None)
     if not caption:
         tags_list = tags if tags else ["explore", "viral", "instagram"]
         hashtag_str = " ".join(f"#{t.lower()}" for t in tags_list)
-        return f"Follow @{logged_in_username} for more! 🖤\n\n{hashtag_str}"
+        return f"Follow @{logged_in_username} for more!\n\n{hashtag_str}"
 
     lines = caption.split('\n')
     cleaned_lines = []
@@ -91,7 +91,7 @@ def smart_replace(caption: str, logged_in_username: str, tags: list[str] = None)
 
     # Ensure our handle appears somewhere
     if f'@{logged_in_username}'.lower() not in result.lower():
-        result += f'\n\nFollow @{logged_in_username} for more 🖤'
+        result += f'\n\nFollow @{logged_in_username} for more!'
 
     return result
 

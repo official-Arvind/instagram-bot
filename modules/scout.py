@@ -122,29 +122,76 @@ def expand_hashtags(cl, base_tags: list[str], limit_per_tag: int = 2) -> list[st
     return expanded
 
 
+def generate_queries(tags: list[str]) -> list[str]:
+    """Generate smart search queries from a list of user-provided tags/terms."""
+    cleaned = [t.strip().replace('#', '').strip() for t in tags if t.strip()]
+    if not cleaned:
+        return []
+    
+    queries = []
+    
+    # 1. Individual tags (especially those that contain spaces)
+    for t in cleaned:
+        if ' ' in t:
+            queries.append(t)
+            
+    # 2. Pairwise combinations of the first few tags
+    # Let's take the first 4 tags (which are usually the primary tags)
+    # and pair them with other tags to get highly specific cross-topic searches
+    primary_tags = cleaned[:4]
+    secondary_tags = cleaned[4:10] if len(cleaned) > 4 else cleaned[1:4]
+    
+    for pt in primary_tags:
+        for st in secondary_tags:
+            if pt != st:
+                queries.append(f"{pt} {st}")
+                
+    # 3. Blended combinations of 3 tags
+    if len(cleaned) >= 3:
+        queries.append(f"{cleaned[0]} {cleaned[1]} {cleaned[2]}")
+    if len(cleaned) >= 4:
+        queries.append(f"{cleaned[0]} {cleaned[2]} {cleaned[3]}")
+
+    # Remove duplicates while preserving order
+    unique_queries = []
+    for q in queries:
+        q_clean = " ".join(q.split())
+        if q_clean and q_clean not in unique_queries:
+            unique_queries.append(q_clean)
+            
+    # 4. Append individual cleaned tags as fallback searches
+    for t in cleaned:
+        if t not in unique_queries:
+            unique_queries.append(t)
+            
+    return unique_queries[:8]  # Limit to top 8 queries to be gentle with the API
+
+
 def search_content(cl, hashtags: list[str], content_type: str, target_count: int) -> list[dict]:
     """
-    Search across multiple hashtags and return ranked list of content.
+    Search across multiple queries and return ranked list of content using keyword-blended search.
     
     Args:
         cl: Authenticated instagrapi Client
-        hashtags: List of hashtags to search (without #)
+        hashtags: List of hashtags/keywords to search
         content_type: 'reel', 'story', 'photo', 'photomusic'
         target_count: How many results to return
     
     Returns:
         Sorted list of media dicts (most engaging first)
     """
-    # Smart Hashtag Expansion
-    console.print("  [dim]Expanding hashtags to discover related trending tags...[/dim]")
-    expanded_tags = expand_hashtags(cl, hashtags)
-    console.print("  [dim]Target tags:[/dim] " + "  ".join(f"[cyan]#{t}[/cyan]" for t in expanded_tags))
+    queries = generate_queries(hashtags)
+    console.print("  [dim]Generated smart search queries for keyword intersection:[/dim]")
+    for q in queries:
+        console.print(f"    - [cyan]\"{q}\"[/cyan]")
     console.print()
 
     content_filter = CONTENT_FILTERS.get(content_type, CONTENT_FILTERS["reel"])
     seen_pks = set()
     candidates = []
-    fetch_per_tag = max(15, target_count * 2)  # Fetch extra to have margin
+    
+    # Fetch a margin of results per query
+    fetch_per_query = max(15, target_count * 2)
 
     with Progress(
         SpinnerColumn(spinner_name="dots"),
@@ -154,12 +201,13 @@ def search_content(cl, hashtags: list[str], content_type: str, target_count: int
         console=console,
         transient=True,
     ) as progress:
-        task = progress.add_task("[cyan]Scouting hashtags...", total=len(expanded_tags))
+        task = progress.add_task("[cyan]Scouting content...", total=len(queries))
 
-        for tag in expanded_tags:
-            progress.update(task, description=f"[cyan]Searching [bold]#{tag}[/bold]...")
+        for q in queries:
+            progress.update(task, description=f"[cyan]Searching [bold]\"{q}\"[/bold]...")
             try:
-                medias = cl.hashtag_medias_top(tag, amount=fetch_per_tag)
+                # Search top media by keyword via the private fbsearch SERP
+                medias = cl.media_search(q, amount=fetch_per_query)
                 for media in medias:
                     pk = int(media.pk)
                     if pk in seen_pks:
@@ -174,10 +222,11 @@ def search_content(cl, hashtags: list[str], content_type: str, target_count: int
 
                     time.sleep(0.3)  # Rate limit courtesy
             except Exception as e:
-                console.print(f"  [yellow]! #{tag}: {e}[/yellow]")
+                console.print(f"  [yellow]! \"{q}\": {e}[/yellow]")
 
             progress.advance(task)
 
-    # Sort by composite score
+    # Sort by composite score (Views * 0.3 + Likes * 0.7)
     candidates.sort(key=lambda x: x["score"], reverse=True)
     return candidates[:target_count]
+

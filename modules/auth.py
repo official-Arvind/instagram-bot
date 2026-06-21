@@ -48,8 +48,14 @@ def _save_session(cl: Client, username: str):
 def _login_username_password(cl: Client) -> tuple[str, bool]:
     """Login with username and password. Returns (username, success)."""
     console.print("\n[bold]Enter your Instagram credentials:[/bold]")
-    username = Prompt.ask("  [cyan]Username[/cyan]")
-    password = Prompt.ask("  [cyan]Password[/cyan]", password=True)
+    import sys
+    if not sys.stdin.isatty():
+        # Read credentials directly from stdin pipeline
+        username = sys.stdin.readline().strip()
+        password = sys.stdin.readline().strip()
+    else:
+        username = Prompt.ask("  [cyan]Username[/cyan]")
+        password = Prompt.ask("  [cyan]Password[/cyan]", password=True)
 
     try:
         console.print("  [dim]Logging in...[/dim]")

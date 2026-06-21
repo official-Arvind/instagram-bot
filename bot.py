@@ -108,12 +108,12 @@ def display_candidates(candidates: list[dict]) -> None:
         border_style="dim",
         padding=(0, 1),
     )
-    table.add_column("#",        style="bold white",  width=4,  no_wrap=True)
-    table.add_column("Author (Ctrl+Click to view)", style="cyan", width=26, no_wrap=True)
-    table.add_column("👁 Views",  style="green",       width=12, no_wrap=True, justify="right")
-    table.add_column("❤ Likes",  style="red",         width=12, no_wrap=True, justify="right")
-    table.add_column("⏱ Dur",    style="yellow",      width=8,  no_wrap=True, justify="right")
-    table.add_column("Caption Preview",               min_width=30)
+    table.add_column("#",        style="bold white",  width=3,  no_wrap=True)
+    table.add_column("Author (Ctrl+Click to view)", style="cyan", width=22, no_wrap=True)
+    table.add_column("👁 Views",  style="green",       width=10, no_wrap=True, justify="right")
+    table.add_column("❤ Likes",  style="red",         width=10, no_wrap=True, justify="right")
+    table.add_column("⏱ Dur",    style="yellow",      width=6,  no_wrap=True, justify="right")
+    table.add_column("Caption Preview",               min_width=20)
 
     for i, c in enumerate(candidates, 1):
         dur = f"{c['duration']:.0f}s" if c.get("duration") else "—"

@@ -65,7 +65,7 @@ def get_hashtags() -> list[str]:
     console.print(Rule("[bold cyan]Step 1 — Hashtags[/bold cyan]", style="cyan"))
     console.print("[dim]Enter hashtags separated by commas. No # needed.[/dim]")
     raw = Prompt.ask("\n  [bold cyan]Hashtags[/bold cyan]")
-    tags = [t.strip().lstrip('#').strip() for t in raw.split(',') if t.strip()]
+    tags = list(dict.fromkeys([t.strip().lstrip('#').strip() for t in raw.split(',') if t.strip()]))
     if not tags:
         console.print("[red]Please enter at least one hashtag.[/red]")
         return get_hashtags()
@@ -82,6 +82,8 @@ def get_content_type() -> str:
     choice = Prompt.ask("\n  [bold]Select[/bold]", choices=list(CONTENT_TYPES.keys()), default="1")
     ctype, label = CONTENT_TYPES[choice]
     console.print(f"\n  [dim]Type selected:[/dim] [bold]{label}[/bold]")
+    if ctype == "photomusic":
+        console.print("  [yellow]⚠ Note: Music attachments are currently unsupported by instagrapi. Posting as standard Photo.[/yellow]")
     return ctype
 
 

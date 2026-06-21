@@ -104,6 +104,7 @@ def _login_session_cookie(cl: Client) -> tuple[str, bool]:
     username = Prompt.ask("  [cyan]Your Instagram username[/cyan]")
     try:
         cl.login_by_sessionid(session_id)
+        cl.get_timeline_feed()  # Verify cookie is valid and active
         return username, True
     except Exception as e:
         console.print(f"  [red]Cookie login failed: {e}[/red]")

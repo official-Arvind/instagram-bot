@@ -16,7 +16,7 @@ def upload_reel(cl, video_path: Path, thumb_path: Path | None, caption: str) -> 
         console.print("    [dim]Uploading Reel...[/dim]")
         kwargs = {"caption": caption}
         if thumb_path and thumb_path.exists():
-            kwargs["thumbnail"] = thumb_path
+            kwargs["thumbnail"] = str(thumb_path)
 
         media = cl.clip_upload(str(video_path), **kwargs)
         return {
@@ -36,7 +36,7 @@ def upload_story_video(cl, video_path: Path, thumb_path: Path | None) -> dict | 
         console.print("    [dim]Uploading Story (video)...[/dim]")
         kwargs = {}
         if thumb_path and thumb_path.exists():
-            kwargs["thumbnail"] = thumb_path
+            kwargs["thumbnail"] = str(thumb_path)
 
         media = cl.video_upload_to_story(str(video_path), **kwargs)
         return {

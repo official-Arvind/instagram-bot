@@ -46,7 +46,7 @@ def _download_url(url: str, dest: Path, retries: int = 3) -> bool:
 def _generate_thumbnail_ffmpeg(video_path: Path, thumb_path: Path) -> bool:
     """Generate JPEG thumbnail from video using ffmpeg. Returns True on success."""
     cmd = [
-        "ffmpeg", "-y", "-i", str(video_path),
+        "ffmpeg", "-y", "-ss", "1", "-i", str(video_path),
         "-vf", "scale=trunc(iw/2)*2:trunc(ih/2)*2",
         "-vframes", "1",
         "-q:v", "2",
@@ -59,8 +59,9 @@ def _generate_thumbnail_ffmpeg(video_path: Path, thumb_path: Path) -> bool:
 def _convert_thumbnail(src: Path, dest: Path) -> bool:
     """Convert any image format (webp, png, etc.) to JPEG."""
     try:
-        im = Image.open(src).convert("RGB")
-        im.save(dest, "JPEG", quality=90)
+        with Image.open(src) as im:
+            rgb_im = im.convert("RGB")
+            rgb_im.save(dest, "JPEG", quality=90)
         return True
     except Exception as e:
         console.print(f"    [yellow]Thumbnail convert failed: {e}[/yellow]")

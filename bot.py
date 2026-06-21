@@ -10,6 +10,17 @@ Usage:
 """
 
 import sys
+
+# Force UTF-8 encoding on Windows to prevent console character mapping crashes (with emojis)
+if sys.platform.startswith('win'):
+    try:
+        sys.stdout.reconfigure(encoding='utf-8')
+        sys.stderr.reconfigure(encoding='utf-8')
+    except AttributeError:
+        import io
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
+
 import time
 import re
 from pathlib import Path
